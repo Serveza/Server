@@ -1,0 +1,12 @@
+flask
+flask-debugtoolbar
+flask-migrate
+flask-restful
+flask-script
+flask-sqlalchemy
+geopy
+money
+passlib
+ratebeer
+sqlalchemy-utils
+wikipedia
