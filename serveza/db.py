@@ -1,3 +1,4 @@
+import arrow
 import math
 import struct
 import sqlalchemy.types as types
@@ -8,7 +9,7 @@ from sqlalchemy import func
 from sqlalchemy.engine import Engine
 from sqlalchemy.event import listens_for
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
-from sqlalchemy_utils import PasswordType, ScalarListType, URLType
+from sqlalchemy_utils import ArrowType, PasswordType, ScalarListType, URLType
 from .settings import PASSWORD_SCHEMES
 
 db = SQLAlchemy()
@@ -50,7 +51,9 @@ class MoneyType(types.TypeDecorator):
         [amount, currency] = value
         return Money(amount, currency)
 
+
 PasswordType = partial(PasswordType, schemes=PASSWORD_SCHEMES)
+LocationType = ScalarListType(float)
 
 # Models
 
@@ -68,6 +71,8 @@ class User(db.Model):
     avatar = db.Column(URLType, nullable=True)
     firstname = db.Column(db.String, nullable=True)
     lastname = db.Column(db.String, nullable=True)
+
+    last_event_check = db.Column(ArrowType)
 
     @property
     def fullname(self):
@@ -87,6 +92,8 @@ class Bar(db.Model):
 
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
+
+    website = db.Column(URLType)
 
     # Location properties / methods
     @property
@@ -188,6 +195,67 @@ class UserBeer(db.Model):
 
     user = db.relationship('User', backref='beers')
     beer = db.relationship('Beer', backref='fans')
+
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String)
+
+    created_at = db.Column(ArrowType, default=arrow.get)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'notification',
+        'polymorphic_on': type,
+        'with_polymorphic': '*',
+    }
+
+    def as_json(self):
+        return {
+            'type': self.type,
+            'created_at': self.created_at.datetime if self.created_at else None,
+        }
+
+
+class BarEvent(Notification):
+    __tablename__ = 'bar_events'
+
+    id = db.Column(db.Integer, db.ForeignKey('notifications.id'), primary_key=True)
+
+    bar_id = db.Column(db.Integer, db.ForeignKey('bars.id'))
+
+    start = db.Column(ArrowType, nullable=True)
+    end = db.Column(ArrowType, nullable=True)
+
+    name = db.Column(db.String)
+    description = db.Column(db.Text, nullable=True)
+
+    location = db.Column(LocationType, nullable=True)
+
+    bar = db.relationship('Bar', backref='events')
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'bar_event',
+    }
+
+    def as_json(self):
+        from flask import url_for
+
+        data = super().as_json()
+
+        data['bar'] = url_for('api.bar_details', id=self.bar_id)
+
+        data['start'] = self.start.datetime if self.start else None
+        data['end'] = self.end.datetime if self.end else None
+
+        data['name'] = self.name
+        data['description'] = self.description
+
+        data['location'] = self.location
+
+        return data
+
 
 # Events
 

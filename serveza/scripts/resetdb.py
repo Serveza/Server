@@ -14,6 +14,7 @@ def reset_data():
     reset_bars()
     reset_beers()
     reset_cartes()
+    reset_events()
 
 
 def data_reader(f):
@@ -79,6 +80,26 @@ def reset_cartes():
             except:
                 pass
 
+# > Events
+
+def reset_events():
+    from serveza.db import Bar, BarEvent
+
+    events_file = DATA_DIR / 'events.csv'
+    with events_file.open() as f:
+        reader = data_reader(f)
+
+        for row in reader:
+            try:
+                bar = Bar.query.filter(Bar.name == row['barname']).one()
+
+                name = row['name']
+
+                event = BarEvent(bar=bar, name=name)
+                db.session.add(event)
+            except e:
+                pass
+
 # Users
 
 
@@ -109,7 +130,8 @@ def reset_users():
 def reset_db():
     # Reset all data
     reset_data()
-    reset_users()
+    # reset_users()
+
     db.session.commit()
 
 

@@ -10,6 +10,7 @@ BAR_BEER_FIELDS = {
 }
 
 BAR_DETAILS_FIELDS = {
+    'id': fields.Integer,
     'name': fields.String,
     'position': fields.FormattedString('{latitude}, {longitude}'),
     'carte': fields.List(fields.Nested(BAR_BEER_FIELDS)),

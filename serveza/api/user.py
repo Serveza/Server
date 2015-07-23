@@ -1,5 +1,6 @@
 from flask import abort, jsonify
 from flask_restful import fields, marshal, reqparse
+from serveza.db import db
 from .base import api_blueprint
 
 USER_FIELDS = {
@@ -52,3 +53,37 @@ def register():
     db.session.commit()
 
     return jsonify(**marshal(user, USER_FIELDS))
+
+
+@api_blueprint.route('/user/notifications')
+def events():
+    import arrow
+    from serveza.db import Bar, User, Notification, BarEvent
+
+    parser = reqparse.RequestParser()
+    parser.add_argument('api_token', required=True)
+    parser.add_argument('bar', type=int, action='append', default=[])
+    parser.add_argument('type')
+    parser.add_argument('update', type=bool, default=False)
+    args = parser.parse_args()
+
+    user = User.query.filter(User.api_token == args.api_token).one()
+
+    notifications = Notification.query
+
+    if user.last_event_check is not None:
+        notifications = notifications.filter(Notification.created_at >= user.last_event_check)
+
+    if args.type is not None:
+        notifications = notifications.filter(Notification.type == args.type)
+
+    if len(args.bar) > 0:
+        notifications = notifications.filter(BarEvent.bar_id.in_(args.bar))
+
+    items = notifications.all()
+
+    if args.update:
+        user.last_event_check = arrow.get()
+        db.session.add(user)
+
+    return jsonify(notifications=[item.as_json() for item in items])
