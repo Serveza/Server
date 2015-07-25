@@ -1,4 +1,4 @@
-"""empty message
+"""Add notifications
 
 Revision ID: 182e20a277d
 Revises: 3abbccb2d8f

@@ -1,4 +1,4 @@
-"""empty message
+"""Init tables
 
 Revision ID: 2e0efb4721e
 Revises: None
