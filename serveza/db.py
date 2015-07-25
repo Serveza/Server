@@ -94,6 +94,7 @@ class Bar(db.Model):
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
 
+    image = db.Column(URLType)
     website = db.Column(URLType)
 
     # Location properties / methods
@@ -261,6 +262,9 @@ class BarEvent(Notification):
         data['description'] = self.description
 
         data['location'] = self.location
+
+        # Easier accesses for specific informations
+        data['bar_image'] = self.bar.image
 
         return data
 
