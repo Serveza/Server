@@ -1,7 +1,7 @@
 from flask_restful import Api, Resource
 from flask_restful import fields, marshal, reqparse
 from sqlalchemy import func
-from .base import api
+from .base import api, swagger
 
 BAR_BEER_FIELDS = {
     'beer_id': fields.Integer,
@@ -24,6 +24,7 @@ BAR_LIST_FIELDS = {
 
 class Bars(Resource):
 
+    @swagger.operation()
     def get(self):
         from serveza.db import db
         from serveza.db import Bar, BarBeer, Beer
@@ -72,6 +73,7 @@ class Bars(Resource):
 
 class Bar(Resource):
 
+    @swagger.operation()
     def get(self, id):
         from serveza.db import Bar
 
