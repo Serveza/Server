@@ -19,6 +19,7 @@ BAR_DETAILS_FIELDS = {
 }
 
 BAR_LIST_FIELDS = {
+    'id': fields.Integer,
     'url': fields.Url('.bar_details'),
     'name': fields.String,
     'position': fields.FormattedString('{latitude}, {longitude}'),
