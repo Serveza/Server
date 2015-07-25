@@ -117,7 +117,7 @@ class Bar(db.Model):
     def address(self):
         from .settings import GEOLOCATOR
 
-        location = GEOLOCATOR.reverse('%f, %f' % (self.latitude, self.longitude))
+        location = GEOLOCATOR.reverse(self.position)
         return location.address
 
     @hybrid_method
