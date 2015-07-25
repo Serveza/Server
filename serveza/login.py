@@ -1,16 +1,10 @@
-from flask import request
-from flask.ext.login import LoginManager
+from flask import abort, request
+from functools import wraps
 from werkzeug.local import LocalProxy
 from .db import User
 
-login_manager = LoginManager()
 
-@login_manager.user_loader
-def user_loader(user_id):
-    return User.query.get(int(user_id))
-
-@login_manager.request_loader
-def user_request_loader(request):
+def get_user():
     import base64
 
     # Try with URL args
@@ -31,10 +25,17 @@ def user_request_loader(request):
     return user
 
 
-def get_user():
-    user = user_request_loader(request)
-    if user is None:
-        user = login_manager.anonymous_user()
-    return user
+def is_logged():
+    return get_user() is not None
 
 current_user = LocalProxy(get_user)
+
+
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not is_logged():
+            abort(403)
+
+        return f(*args, **kwargs)
+    return wrapper

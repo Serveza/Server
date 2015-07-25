@@ -1,7 +1,7 @@
 from flask_restful import Api, Resource
 from flask_restful import fields, marshal, reqparse
 from sqlalchemy import func
-from serveza.login import current_user
+from serveza.login import current_user, login_required
 from .base import api, swagger
 
 BAR_BEER_FIELDS = {
@@ -54,7 +54,7 @@ class Bars(Resource):
 
         bars = Bar.query
 
-        if args.owned and not current_user.is_anonymous:
+        if args.owned and current_user:
             bars = bars.filter(Bar.owners.contains(current_user._get_current_object()))
 
         if all(p is not None for p in pos):
@@ -77,6 +77,11 @@ class Bars(Resource):
 
         bars = bars.all()
         return marshal(bars, m_fields, envelope='bars')
+
+    @swagger.operation()
+    @login_required
+    def post(self):
+        pass
 
 
 class Bar(Resource):

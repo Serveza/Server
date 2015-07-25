@@ -15,10 +15,6 @@ cors = CORS(app, resources=r'/api/*')
 from .db import db
 db.init_app(app)
 
-# Init login
-from .login import login_manager
-login_manager.init_app(app)
-
 # Init modules
 from .api import api_blueprint
 app.register_blueprint(api_blueprint, url_prefix='/api')
