@@ -1,4 +1,5 @@
 from flask import abort, request
+from flask_restful import reqparse
 from functools import wraps
 from werkzeug.local import LocalProxy
 from .db import User
@@ -8,9 +9,11 @@ def get_user():
     import base64
 
     # Try with URL args
-    api_token = request.args.get('api_token')
-    if not api_token:
-        api_token = request.form.get('api_token')
+    parser = reqparse.RequestParser()
+    parser.add_argument('api_token', type=str)
+    args = parser.parse_args(request)
+
+    api_token = args.api_token
     if not api_token:
         header = request.headers.get('Authorization')
         if header:

@@ -3,7 +3,7 @@ from flask import abort, jsonify
 from flask_restful import Api, Resource
 from flask_restful import fields, marshal, reqparse
 from serveza.db import db
-from serveza.login import current_user, login_required
+from serveza.login import get_user, login_required
 from .base import api, swagger
 
 # User login / register
@@ -90,9 +90,11 @@ class UserNotifications(Resource):
 
         notifications = Notification.query
 
-        if current_user.last_event_check is not None:
+        user = get_user()
+
+        if user.last_event_check is not None:
             notifications = notifications.filter(
-                Notification.created_at >= current_user.last_event_check)
+                Notification.created_at >= user.last_event_check)
 
         if args.type is not None:
             notifications = notifications.filter(
@@ -104,7 +106,9 @@ class UserNotifications(Resource):
         items = notifications.all()
 
         if args.update:
-            current_user.last_event_check = arrow.get()
+            user.last_event_check = arrow.get()
+            db.session.add(user)
+            db.session.commit()
 
         return jsonify(notifications=[item.as_json() for item in items])
 
@@ -113,15 +117,43 @@ api.add_resource(UserNotifications, '/user/notifications', endpoint='user_notifi
 # User favorites
 class UserFavoriteBeers(Resource):
 
-    @swagger.operation()
+    @swagger.operation(
+        parameters=[
+            {
+                'name': 'api_token',
+                'description': 'API token',
+                'required': True,
+                'dataType': 'string',
+                'paramType': 'query',
+            },
+        ],
+    )
     @login_required
     def get(self):
         from .beers import BEER_LIST_FIELDS
 
-        beers = current_user.favorited_beers
+        user = get_user()
+        beers = user.favorited_beers
         return marshal(beers, BEER_LIST_FIELDS)
 
-    @swagger.operation()
+    @swagger.operation(
+        parameters=[
+            {
+                'name': 'api_token',
+                'description': 'API token',
+                'required': True,
+                'dataType': 'string',
+                'paramType': 'form',
+            },
+            {
+                'name': 'beer',
+                'description': 'Beer ID',
+                'required': True,
+                'dataType': 'int',
+                'paramType': 'form',
+            },
+        ],
+    )
     @login_required
     def post(self):
         from serveza.db import Beer
@@ -130,10 +162,13 @@ class UserFavoriteBeers(Resource):
         parser.add_argument('beer', type=int)
         args = parser.parse_args()
 
-        beer = Beer.query.get(args.beer)
+        user = get_user()
 
+        beer = Beer.query.get(args.beer)
         if beer is not None:
-            current_user.favorited_beers.append(beer)
+            user.favorited_beers.append(beer)
+            db.session.add(user)
+            db.session.commit()
 
         return 'ok'
 
@@ -146,10 +181,14 @@ class UserFavoriteBeers(Resource):
         parser.add_argument('beer', type=int)
         args = parser.parse_args()
 
+        user = get_user()
+
         beer = Beer.query.get(args.beer)
         if beer is not None:
             with suppress(ValueError):
-                current_user.favorited_beers.remove(beer)
+                user.favorited_beers.remove(beer)
+            db.session.add(user)
+            db.session.commit()
 
         return 'ok'
 
@@ -160,7 +199,8 @@ class UserFavoriteBars(Resource):
     def get(self):
         from .bars import BAR_LIST_FIELDS
 
-        bars = current_user.favorited_bars
+        user = get_user()
+        bars = user.favorited_bars
         return marshal(bars, BEER_LIST_FIELDS)
 
     @swagger.operation()
@@ -172,10 +212,13 @@ class UserFavoriteBars(Resource):
         parser.add_argument('bar', type=int)
         args = parser.parse_args()
 
-        bar = Bar.query.get(args.bar)
+        user = get_user()
 
+        bar = Bar.query.get(args.bar)
         if bar is not None:
-            current_user.favorited_bars.append(bar)
+            user.favorited_bars.append(bar)
+            db.session.add(user)
+            db.session.commit()
 
         return 'ok'
 
@@ -188,10 +231,14 @@ class UserFavoriteBars(Resource):
         parser.add_argument('bar', type=int)
         args = parser.parse_args()
 
+        user = get_user()
+
         bar = Bar.query.get(args.bar)
         if bar is not None:
             with suppress(ValueError):
-                current_user.favorited_bars.remove(bar)
+                user.favorited_bars.remove(bar)
+            db.session.add(user)
+            db.session.commit()
 
         return 'ok'
 
