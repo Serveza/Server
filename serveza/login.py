@@ -1,4 +1,6 @@
+from flask import request
 from flask.ext.login import LoginManager
+from werkzeug.local import LocalProxy
 from .db import User
 
 login_manager = LoginManager()
@@ -27,3 +29,12 @@ def user_request_loader(request):
         user = User.query.filter(User.api_token == api_token).first()
 
     return user
+
+
+def get_user():
+    user = user_request_loader(request)
+    if user is None:
+        user = login_manager.anonymous_user()
+    return user
+
+current_user = LocalProxy(get_user)

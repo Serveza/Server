@@ -1,6 +1,7 @@
 from flask_restful import Api, Resource
 from flask_restful import fields, marshal, reqparse
 from sqlalchemy import func
+from serveza.login import current_user
 from .base import api, swagger
 
 BAR_BEER_FIELDS = {
@@ -31,7 +32,6 @@ class Bars(Resource):
         from serveza.db import Bar, BarBeer, Beer
 
         m_fields = BAR_LIST_FIELDS.copy()
-        bars = Bar.query
 
         position = lambda value: tuple(map(float, value.split(',')))
 
@@ -41,6 +41,7 @@ class Bars(Resource):
         parser.add_argument('pos', type=position)
         parser.add_argument('range', type=float)
         parser.add_argument('beers', action='append', type=int, default=[])
+        parser.add_argument('owned', type=bool, default=False)
         args = parser.parse_args()
 
         latitude = args.latitude
@@ -49,6 +50,11 @@ class Bars(Resource):
         pos = (latitude, longitude)
         if args.pos:
             pos = args.pos
+
+        bars = Bar.query
+
+        if args.owned and not current_user.is_anonymous:
+            bars = bars.filter(Bar.owners.contains(current_user._get_current_object()))
 
         if all(p is not None for p in pos):
             bars = bars.order_by(Bar.distance(pos))

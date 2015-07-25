@@ -9,6 +9,7 @@ from money import Money
 from sqlalchemy import func
 from sqlalchemy.engine import Engine
 from sqlalchemy.event import listens_for
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy_utils import ArrowType, PasswordType, ScalarListType, URLType
 from .settings import PASSWORD_SCHEMES
@@ -75,6 +76,8 @@ class User(db.Model, UserMixin):
 
     last_event_check = db.Column(ArrowType)
 
+    bars_owned = association_proxy('_bars_owned', 'bar', creator=lambda bar: BarOwner(bar=bar))
+
     @property
     def fullname(self):
         return '%s %s' % (self.firstname, self.lastname)
@@ -96,6 +99,8 @@ class Bar(db.Model):
 
     image = db.Column(URLType)
     website = db.Column(URLType)
+
+    owners = association_proxy('_owners', 'user', creator=lambda owner: BarOwner(user=owner))
 
     # Location properties / methods
     @property
@@ -190,8 +195,8 @@ class BarOwner(db.Model):
         db.Integer, db.ForeignKey('users.id'), primary_key=True)
     bar_id = db.Column(db.Integer, db.ForeignKey('bars.id'), primary_key=True)
 
-    user = db.relationship('User', backref='bars_owned')
-    bar = db.relationship('Bar', backref=db.backref('owner', uselist=False))
+    user = db.relationship('User', backref='_bars_owned')
+    bar = db.relationship('Bar', backref='_owners')
 
 
 class UserBeer(db.Model):
