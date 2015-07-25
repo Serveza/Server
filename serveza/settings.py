@@ -1,3 +1,4 @@
+from geopy.geocoders import Nominatim
 from pathlib import Path
 
 PROJECT_ROOT = Path().parent.resolve()
@@ -16,3 +17,6 @@ SQLALCHEMY_ECHO = True
 SECRET_KEY = 'GIBJV@y<I2@jfrEBFBx@*7`l9:@@ax~v'
 
 DEBUG_TB_ENABLED = True
+
+# Geo
+GEOLOCATOR = Nominatim()

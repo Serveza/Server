@@ -2,6 +2,7 @@ import arrow
 import math
 import struct
 import sqlalchemy.types as types
+from flask.ext.login import UserMixin
 from flask.ext.sqlalchemy import SQLAlchemy
 from functools import partial
 from money import Money
@@ -58,7 +59,7 @@ LocationType = ScalarListType(float)
 # Models
 
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -105,6 +106,13 @@ class Bar(db.Model):
         (latitude, longitude) = value
         self.latitude = latitude
         self.longitude = longitude
+
+    @property
+    def address(self):
+        from .settings import GEOLOCATOR
+
+        location = GEOLOCATOR.reverse('%f, %f' % (self.latitude, self.longitude))
+        return location.address
 
     @hybrid_method
     def distance(self, pos):

@@ -13,6 +13,7 @@ BAR_DETAILS_FIELDS = {
     'id': fields.Integer,
     'name': fields.String,
     'position': fields.FormattedString('{latitude}, {longitude}'),
+    'address': fields.String,
     'carte': fields.List(fields.Nested(BAR_BEER_FIELDS)),
 }
 

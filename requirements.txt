@@ -2,6 +2,7 @@ arrow
 flask
 flask-cors
 flask-debugtoolbar
+flask-login
 flask-migrate
 flask-restful
 flask-restful-swagger

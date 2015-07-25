@@ -1,18 +1,24 @@
 from flask import Flask
-from flask import render_template
-from flask_cors import CORS
-from flask_debugtoolbar import DebugToolbarExtension
-from .api import api_blueprint
-from .db import db
 
 app = Flask(__name__)
 app.config.from_object('serveza.settings')
 
+# Init debug toolbar
+from flask_debugtoolbar import DebugToolbarExtension
 toolbar = DebugToolbarExtension(app)
-cors = CORS(app)
+
+# Init CORS
+from flask_cors import CORS
+cors = CORS(app, resources=r'/api/*')
 
 # Init DB
+from .db import db
 db.init_app(app)
 
+# Init login
+from .login import login_manager
+login_manager.init_app(app)
+
 # Init modules
+from .api import api_blueprint
 app.register_blueprint(api_blueprint, url_prefix='/api')
