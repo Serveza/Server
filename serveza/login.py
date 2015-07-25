@@ -10,6 +10,8 @@ def get_user():
     # Try with URL args
     api_token = request.args.get('api_token')
     if not api_token:
+        api_token = request.form.get('api_token')
+    if not api_token:
         header = request.headers.get('Authorization')
         if header:
             encoded_api_token = header[len('Basic '):]
