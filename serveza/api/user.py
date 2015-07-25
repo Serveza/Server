@@ -36,7 +36,7 @@ class UserLogin(Resource):
 
     @swagger.operation()
     def get(self):
-        self.post()
+        return self.post()
 
 
 class UserRegister(Resource):
