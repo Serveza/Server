@@ -76,7 +76,9 @@ class User(db.Model, UserMixin):
 
     last_event_check = db.Column(ArrowType)
 
-    bars_owned = association_proxy('_bars_owned', 'bar', creator=lambda bar: BarOwner(bar=bar))
+    owner_bars = db.relationship('Bar', secondary='bar_owners')
+    favorited_beers = db.relationship('Beer', secondary='user_beers')
+    favorited_bars = db.relationship('Bar', secondary='user_bars')
 
     @property
     def fullname(self):
@@ -100,7 +102,8 @@ class Bar(db.Model):
     image = db.Column(URLType)
     website = db.Column(URLType)
 
-    owners = association_proxy('_owners', 'user', creator=lambda owner: BarOwner(user=owner))
+    owner = db.relationship('User', secondary='bar_owners', uselist=False)
+    fans = db.relationship('User', secondary='user_bars')
 
     # Location properties / methods
     @property
@@ -174,6 +177,8 @@ class Beer(db.Model):
     degree = db.Column(db.Float)
     description = db.Column(db.Text)
 
+    fans = db.relationship('User', secondary='user_beers')
+
 
 class BarBeer(db.Model):
     __tablename__ = 'bar_beers'
@@ -195,9 +200,6 @@ class BarOwner(db.Model):
         db.Integer, db.ForeignKey('users.id'), primary_key=True)
     bar_id = db.Column(db.Integer, db.ForeignKey('bars.id'), primary_key=True)
 
-    user = db.relationship('User', backref='_bars_owned')
-    bar = db.relationship('Bar', backref='_owners')
-
 
 class UserBeer(db.Model):
     __tablename__ = 'user_beers'
@@ -207,8 +209,14 @@ class UserBeer(db.Model):
     beer_id = db.Column(
         db.Integer, db.ForeignKey('beers.id'), primary_key=True)
 
-    user = db.relationship('User', backref='beers')
-    beer = db.relationship('Beer', backref='fans')
+
+class UserBar(db.Model):
+    __tablename__ = 'user_bars'
+
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    bar_id = db.Column(
+        db.Integer, db.ForeignKey('bars.id'), primary_key=True)
 
 
 class Notification(db.Model):
@@ -235,7 +243,8 @@ class Notification(db.Model):
 class BarEvent(Notification):
     __tablename__ = 'bar_events'
 
-    id = db.Column(db.Integer, db.ForeignKey('notifications.id'), primary_key=True)
+    id = db.Column(
+        db.Integer, db.ForeignKey('notifications.id'), primary_key=True)
 
     bar_id = db.Column(db.Integer, db.ForeignKey('bars.id'))
 

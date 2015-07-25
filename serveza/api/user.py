@@ -1,9 +1,12 @@
+from contextlib import suppress
 from flask import abort, jsonify
 from flask_restful import Api, Resource
 from flask_restful import fields, marshal, reqparse
 from serveza.db import db
+from serveza.login import current_user, login_required
 from .base import api, swagger
 
+# User login / register
 @swagger.model
 class UserModel:
 
@@ -67,28 +70,29 @@ class UserRegister(Resource):
 
         return jsonify(**marshal(user, UserModel.resource_fields))
 
+api.add_resource(UserLogin, '/user/login', endpoint='user_login')
+api.add_resource(UserRegister, '/user/register', endpoint='user_register')
 
+# User notifications
 class UserNotifications(Resource):
 
     @swagger.operation()
+    @login_required
     def get(self):
         import arrow
         from serveza.db import Bar, User, Notification, BarEvent
 
         parser = reqparse.RequestParser()
-        parser.add_argument('api_token', required=True)
         parser.add_argument('bar', type=int, action='append', default=[])
         parser.add_argument('type')
         parser.add_argument('update', type=bool, default=False)
         args = parser.parse_args()
 
-        user = User.query.filter(User.api_token == args.api_token).one()
-
         notifications = Notification.query
 
-        if user.last_event_check is not None:
+        if current_user.last_event_check is not None:
             notifications = notifications.filter(
-                Notification.created_at >= user.last_event_check)
+                Notification.created_at >= current_user.last_event_check)
 
         if args.type is not None:
             notifications = notifications.filter(
@@ -100,11 +104,97 @@ class UserNotifications(Resource):
         items = notifications.all()
 
         if args.update:
-            user.last_event_check = arrow.get()
-            db.session.add(user)
+            current_user.last_event_check = arrow.get()
 
         return jsonify(notifications=[item.as_json() for item in items])
 
-api.add_resource(UserLogin, '/user/login', endpoint='user_login')
-api.add_resource(UserRegister, '/user/register', endpoint='user_register')
 api.add_resource(UserNotifications, '/user/notifications', endpoint='user_notifications')
+
+# User favorites
+class UserFavoriteBeers(Resource):
+
+    @swagger.operation()
+    @login_required
+    def get(self):
+        from .beers import BEER_LIST_FIELDS
+
+        beers = current_user.favorited_beers
+        return marshal(beers, BEER_LIST_FIELDS)
+
+    @swagger.operation()
+    @login_required
+    def post(self):
+        from serveza.db import Beer
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('beer', type=int)
+        args = parser.parse_args()
+
+        beer = Beer.query.get(args.beer)
+
+        if beer is not None:
+            current_user.favorited_beers.append(beer)
+
+        return 'ok'
+
+    @swagger.operation()
+    @login_required
+    def delete(self):
+        from serveza.db import Beer
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('beer', type=int)
+        args = parser.parse_args()
+
+        beer = Beer.query.get(args.beer)
+        if beer is not None:
+            with suppress(ValueError):
+                current_user.favorited_beers.remove(beer)
+
+        return 'ok'
+
+class UserFavoriteBars(Resource):
+
+    @swagger.operation()
+    @login_required
+    def get(self):
+        from .bars import BAR_LIST_FIELDS
+
+        bars = current_user.favorited_bars
+        return marshal(bars, BEER_LIST_FIELDS)
+
+    @swagger.operation()
+    @login_required
+    def post(self):
+        from serveza.db import Bar
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('bar', type=int)
+        args = parser.parse_args()
+
+        bar = Bar.query.get(args.bar)
+
+        if bar is not None:
+            current_user.favorited_bars.append(bar)
+
+        return 'ok'
+
+    @swagger.operation()
+    @login_required
+    def delete(self):
+        from serveza.db import Bar
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('bar', type=int)
+        args = parser.parse_args()
+
+        bar = Bar.query.get(args.bar)
+        if bar is not None:
+            with suppress(ValueError):
+                current_user.favorited_bars.remove(bar)
+
+        return 'ok'
+
+
+api.add_resource(UserFavoriteBeers, '/user/favorites/beers')
+api.add_resource(UserFavoriteBars, '/user/favorites/bars')
