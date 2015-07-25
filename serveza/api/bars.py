@@ -1,4 +1,5 @@
-from flask_restful import Api, Resource
+from flask import url_for
+from flask_restful import Resource
 from flask_restful import fields, marshal, reqparse
 from sqlalchemy import func
 from serveza.login import current_user, login_required
@@ -6,6 +7,7 @@ from .base import api, swagger
 
 BAR_BEER_FIELDS = {
     'beer_id': fields.Integer,
+    'url': fields.String(attribute=lambda entry: url_for('.beer_details', id=entry.beer.id)),
     'name': fields.String(attribute=lambda entry: entry.beer.name),
     'price': fields.String,
 }
@@ -29,7 +31,6 @@ class Bars(Resource):
 
     @swagger.operation()
     def get(self):
-        from serveza.db import db
         from serveza.db import Bar, BarBeer, Beer
 
         m_fields = BAR_LIST_FIELDS.copy()
