@@ -34,6 +34,10 @@ class UserLogin(Resource):
 
         return jsonify(**marshal(user, UserModel.resource_fields))
 
+    @swagger.operation()
+    def get(self):
+        self.post()
+
 
 class UserRegister(Resource):
 
