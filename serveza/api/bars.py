@@ -72,7 +72,7 @@ class Bar(Resource):
     def get(self, id):
         from serveza.db import Bar
 
-        bar = Bar.query.get(id)
+        bar = Bar.query.get_or_404(id)
         return marshal(bar, BAR_DETAILS_FIELDS, envelope='bar')
 
 
@@ -82,7 +82,7 @@ class BarComments(Resource):
     def get(self, id):
         from serveza.db import Bar
 
-        bar = Bar.query.get(id)
+        bar = Bar.query.get_or_404(id)
         return marshal(bar.comments, BAR_COMMENT_FIELDS, envelope='comments')
 
     @swagger.operation(
@@ -96,7 +96,7 @@ class BarComments(Resource):
     def post(self, id):
         from serveza.db import Bar, BarComment
 
-        bar = Bar.query.get(id)
+        bar = Bar.query.get_or_404(id)
 
         parser = reqparse.RequestParser()
         parser.add_argument('score', type=int)

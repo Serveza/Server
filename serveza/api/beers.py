@@ -21,7 +21,7 @@ class Beer(Resource):
     def get(self, id):
         from serveza.db import Beer
 
-        beer = Beer.query.get(id)
+        beer = Beer.query.get_or_404(id)
         return marshal(beer, BEER_DETAILS_FIELDS)
 
 
@@ -31,7 +31,7 @@ class BeerComments(Resource):
     def get(self, id):
         from serveza.db import Beer
 
-        beers = Beer.query.get(id)
+        beers = Beer.query.get_or_404(id)
         return marshal(beers.comments, BEER_COMMENT_FIELDS, envelope='comments')
 
     @swagger.operation()
@@ -39,7 +39,7 @@ class BeerComments(Resource):
     def post(self, id):
         from serveza.db import Beer, BeerComment
 
-        beer = Beer.query.get(id)
+        beer = Beer.query.get_or_404(id)
 
         parser = reqparse.RequestParser()
         parser.add_argument('score', type=int)
