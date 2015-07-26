@@ -1,4 +1,5 @@
-from flask import url_for
+import arrow
+from flask import url_for, jsonify
 from flask_restful import Resource
 from flask_restful import fields, marshal, reqparse
 from sqlalchemy import func
@@ -267,8 +268,60 @@ class BarBeers(Resource):
 
         return 'ok'
 
+
+class BarEvents(Resource):
+
+    @swagger.operation()
+    def get(self, id):
+        from serveza.db import Bar
+
+        bar = Bar.query.get_or_404(id)
+        return jsonify(events=[event.as_json() for event in bar.events])
+
+    @swagger.operation(
+        parameters=[
+            dict(api_token_param, paramType='form'),
+            dict(name='name', type='string', description='Event name', required=True, paramType='form'),
+            dict(name='start', type='string', description='Event start', paramType='form'),
+            dict(name='end', type='string', description='Event start', paramType='form'),
+            dict(name='description', type='string', description='Event description', paramType='form'),
+            dict(name='location', type='string', description='Event location', paramType='form'),
+        ],
+    )
+    @login_required
+    def post(self, id):
+        from serveza.db import Bar, BarEvent
+
+        bar = Bar.query.get_or_404(id)
+
+        def location(s):
+            parts = s.split(',')
+            parts = [part.strip() for part in parts]
+            parts = [float(part) for part in parts]
+            return tuple(parts)
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', required=True)
+        parser.add_argument('start', type=arrow.get)
+        parser.add_argument('end', type=arrow.get)
+        parser.add_argument('description')
+        parser.add_argument('location', type=location)
+        args = parser.parse_args()
+
+        event = BarEvent(bar=bar, name=args.name)
+        event.start = args.start
+        event.end = args.end
+        event.description = args.description
+        event.location = args.location
+
+        db.session.add(event)
+        db.session.commit()
+
+        return jsonify(event=event.as_json())
+
 api.add_resource(Bars, '/bars')
 api.add_resource(Bar, '/bars/<int:id>', endpoint='bar_details')
 api.add_resource(
     BarComments, '/bars/<int:id>/comments', endpoint='bar_comments')
 api.add_resource(BarBeers, '/bars/<int:id>/beers', endpoint='bar_beers')
+api.add_resource(BarEvents, '/bars/<int:id>/events', endpoint='bar_events')
