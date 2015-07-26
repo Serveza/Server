@@ -1,5 +1,6 @@
 from flask_restful import Resource
 from flask_restful import fields, marshal, reqparse
+from serveza.login import login_required
 from .base import api, swagger
 from .fields import BEER_LIST_FIELDS, BEER_DETAILS_FIELDS, BEER_COMMENT_FIELDS
 
@@ -57,4 +58,4 @@ class BeerComments(Resource):
 
 api.add_resource(Beers, '/beers')
 api.add_resource(Beer, '/beers/<int:id>', endpoint='beer_details')
-api.add_resource(BeerComment, '/beers/<int:id>/comments', endpoint='beer_comments')
+api.add_resource(BeerComments, '/beers/<int:id>/comments', endpoint='beer_comments')

@@ -18,6 +18,17 @@ BAR_COMMENT_FIELDS = {
     'author': fields.Nested(BAR_COMMENT_AUTHOR_FIELDS),
 }
 
+BEER_COMMENT_AUTHOR_FIELDS = {
+    'avatar': fields.String,
+    'firstname': fields.String,
+}
+
+BEER_COMMENT_FIELDS = {
+    'score': fields.Integer,
+    'comment': fields.String,
+    'author': fields.Nested(BAR_COMMENT_AUTHOR_FIELDS),
+}
+
 BAR_DETAILS_FIELDS = {
     'id': fields.Integer,
     'name': fields.String,
