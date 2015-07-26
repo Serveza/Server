@@ -81,13 +81,17 @@ class Bars(Resource):
         parser.add_argument('name', required=True)
         parser.add_argument('image')
         parser.add_argument('website')
-        parser.add_resource('position')
+        parser.add_argument('position')
         args = parser.parse_args()
 
         bar = Bar(name=args.name, owner=current_user)
         bar.image = args.image
         bar.website = args.website
         bar.position = args.position
+
+        _bar = Bar.query.filter(Bar.name == bar.name, Bar.latitude == bar.latitude, Bar.longitude == bar.longitude).first()
+        if _bar is not None:
+            bar = _bar
 
         db.session.add(bar)
         db.session.commit()
@@ -125,7 +129,7 @@ class Bar(Resource):
         parser.add_argument('name')
         parser.add_argument('image')
         parser.add_argument('website')
-        parser.add_resource('position')
+        parser.add_argument('position')
         args = parser.parse_args()
 
         bar = Bar.query.get_or_404(id)

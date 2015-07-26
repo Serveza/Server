@@ -117,6 +117,9 @@ class Bar(db.Model):
             value = [float(part.strip()) for part in value]
             value = tuple(value)
 
+        if value is None:
+            value = (None, None)
+
         (latitude, longitude) = value
         self.latitude = latitude
         self.longitude = longitude

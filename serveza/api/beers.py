@@ -23,6 +23,7 @@ class Beers(Resource):
     )
     @login_required
     def post(self):
+        from serveza.db import Beer
         from serveza.utils.scrap.beer import scrap_beer
 
         parser = reqparse.RequestParser()
@@ -34,16 +35,14 @@ class Beers(Resource):
         except:
             beer = scrap_beer('%s (bière)' % (args.name))
 
-        try:
-            db.session.add(beer)
-            db.session.commit()
+        _beer = Beer.query.filter(Beer.name == beer.name).first()
+        if _beer is not None:
+            beer = _beer
 
-            return marshal(beer, BEER_DETAILS_FIELDS, envelope='beer')
-        except:
-            db.session.rollback()
+        db.session.add(beer)
+        db.session.commit()
 
-        return {}
-
+        return marshal(beer, BEER_DETAILS_FIELDS, envelope='beer')
 
 
 class Beer(Resource):
