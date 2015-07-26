@@ -130,7 +130,7 @@ def reset_users():
 def reset_db():
     # Reset all data
     reset_data()
-    # reset_users()
+    reset_users()
 
     db.session.commit()
 

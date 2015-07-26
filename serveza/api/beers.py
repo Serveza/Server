@@ -1,6 +1,7 @@
 from flask_restful import Resource
 from flask_restful import fields, marshal, reqparse
-from serveza.login import get_user, login_required
+from serveza.db import db
+from serveza.login import get_user, login_required, api_token_param
 from .base import api, swagger
 from .fields import BEER_LIST_FIELDS, BEER_DETAILS_FIELDS, BEER_COMMENT_FIELDS
 
@@ -13,6 +14,36 @@ class Beers(Resource):
 
         beers = Beer.query.all()
         return marshal(beers, BEER_LIST_FIELDS)
+
+    @swagger.operation(
+        parameters=[
+            dict(api_token_param, paramType='form'),
+            dict(name='name', type='string', description='Beer name', required=True, paramType='form'),
+        ],
+    )
+    @login_required
+    def post(self):
+        from serveza.utils.scrap.beer import scrap_beer
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', required=True)
+        args = parser.parse_args()
+
+        try:
+            beer = scrap_beer(args.name)
+        except:
+            beer = scrap_beer('%s (bière)' % (args.name))
+
+        try:
+            db.session.add(beer)
+            db.session.commit()
+
+            return marshal(beer, BEER_DETAILS_FIELDS, envelope='beer')
+        except:
+            db.session.rollback()
+
+        return {}
+
 
 
 class Beer(Resource):

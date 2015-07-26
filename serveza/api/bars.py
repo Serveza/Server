@@ -104,6 +104,45 @@ class Bar(Resource):
         bar = Bar.query.get_or_404(id)
         return marshal(bar, BAR_DETAILS_FIELDS, envelope='bar')
 
+    @swagger.operation(
+        parameters=[
+            dict(api_token_param, paramType='form'),
+            dict(name='name', type='string', description='Bar name',
+                 required=True, paramType='form'),
+            dict(name='image', type='url',
+                 description='Bar photo', paramType='form'),
+            dict(name='website', type='url',
+                 description='Bar website', paramType='form'),
+            dict(name='position', type='string',
+                 description='Bar location', paramType='form'),
+        ],
+    )
+    @login_required
+    def put(self, id):
+        from serveza.db import Bar
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('name')
+        parser.add_argument('image')
+        parser.add_argument('website')
+        parser.add_resource('position')
+        args = parser.parse_args()
+
+        bar = Bar.query.get_or_404(id)
+        if args.name:
+            bar.name = args.name
+        if args.image:
+            bar.image = args.image
+        if args.website:
+            bar.website = args.website
+        if args.position:
+            bar.position = args.position
+
+        db.session.add(bar)
+        db.session.commit()
+
+        return 'ok'
+
 
 class BarComments(Resource):
 
