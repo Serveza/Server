@@ -149,6 +149,21 @@ class Bar(Resource):
 
         return 'ok'
 
+    @swagger.operation(
+        parameters=[
+            dict(api_token_param, paramType='form'),
+        ],
+    )
+    @login_required
+    def delete(self, id):
+        from serveza.db import Bar
+
+        bar = Bar.query.get_or_404(id)
+        db.session.delete(bar)
+        db.session.commit()
+
+        return 'ok'
+
 
 class BarComments(Resource):
 
