@@ -31,11 +31,9 @@ class Beers(Resource):
         parser.add_argument('name', required=True)
         args = parser.parse_args()
 
-        try:
-            beer = scrap_beer(args.name)
-        except:
+        beer = scrap_beer(args.name)
+        if beer is None:
             beer = scrap_beer('%s (bière)' % (args.name))
-
         if beer is None:
             abort(404, 'Can\'t find informations about this beer.')
 
