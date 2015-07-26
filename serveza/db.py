@@ -47,6 +47,10 @@ class MoneyType(types.TypeDecorator):
     impl = ScalarListType
 
     def process_bind_param(self, value, dialect):
+        if isinstance(value, str):
+            (amount, currency) = value.split()
+            value = Money(amount, currency)
+
         return [value.amount, value.currency]
 
     def process_result_value(self, value, dialect):

@@ -193,7 +193,67 @@ class BarComments(Resource):
 
         return marshal(comment, BAR_COMMENT_FIELDS, envelope='comment')
 
+
+class BarBeers(Resource):
+
+    @swagger.operation()
+    def get(self, id):
+        from serveza.db import Bar
+
+        bar = Bar.query.get_or_404(id)
+        return marshal(bar.carte, BAR_BEER_FIELDS, envelope='beers')
+
+    @swagger.operation(
+        parameters=[
+            dict(api_token_param, paramType='form'),
+            dict(name='beer', type='int', description='Beer ID', required=True, paramType='form'),
+            dict(name='price', type='string', description='Beer price', required=True, paramType='form'),
+        ],
+    )
+    @login_required
+    def post(self, id):
+        from serveza.db import Bar, BarBeer, Beer
+
+        bar = Bar.query.get_or_404(id)
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('beer', type=int, required=True)
+        parser.add_argument('price', required=True)
+        args = parser.parse_args()
+
+        beer = Beer.query.get_or_404(args.beer)
+
+        entry = BarBeer(bar=bar, beer=beer, price=args.price)
+        db.session.add(entry)
+        db.session.commit()
+
+        return marshal(entry, BAR_BEER_FIELDS, envelope='beer')
+
+    @swagger.operation(
+        parameters=[
+            dict(api_token_param, paramType='form'),
+            dict(name='beer', type='int', description='Beer ID', required=True, paramType='form'),
+        ],
+    )
+    @login_required
+    def delete(self, id):
+        from serveza.db import Bar, BarBeer, Beer
+
+        bar = Bar.query.get_or_404(id)
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('beer', type=int, required=True)
+        args = parser.parse_args()
+
+        beer = Beer.query.get_or_404(args.beer)
+
+        BarBeer.query.filter(BarBeer.bar == bar, BarBeer.beer == beer).delete()
+        db.session.commit()
+
+        return 'ok'
+
 api.add_resource(Bars, '/bars')
 api.add_resource(Bar, '/bars/<int:id>', endpoint='bar_details')
 api.add_resource(
     BarComments, '/bars/<int:id>/comments', endpoint='bar_comments')
+api.add_resource(BarBeers, '/bars/<int:id>/beers', endpoint='bar_beers')
