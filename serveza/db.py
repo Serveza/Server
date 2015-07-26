@@ -309,6 +309,16 @@ class BarEvent(Notification):
         'polymorphic_identity': 'bar_event',
     }
 
+    @property
+    def address(self):
+        from .settings import GEOLOCATOR
+
+        try:
+            location = GEOLOCATOR.reverse(tuple(self.location))
+            return location.address
+        except:
+            return None
+
     def as_json(self):
         from flask import url_for
 
@@ -323,6 +333,7 @@ class BarEvent(Notification):
         data['description'] = self.description
 
         data['location'] = self.location
+        data['address'] = self.address
 
         # Easier accesses for specific informations
         data['bar_image'] = self.bar.image
