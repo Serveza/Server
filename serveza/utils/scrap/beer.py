@@ -8,9 +8,12 @@ wikipedia.set_lang('fr')
 def scrap_beer(name):
     from serveza.db import Beer
 
-    page = wikipedia.page(name, auto_suggest=True)
-    rb_result = rb.search(name)['beers'][0]
-    rb_beer = rb.get_beer(rb_result['url'])
+    try:
+        page = wikipedia.page(name, auto_suggest=True)
+        rb_result = rb.search(name)['beers'][0]
+        rb_beer = rb.get_beer(rb_result['url'])
+    except:
+        return None
 
     def find_proper_image(urls):
         import re

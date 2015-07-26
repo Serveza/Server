@@ -1,3 +1,4 @@
+from flask import abort
 from flask_restful import Resource
 from flask_restful import fields, marshal, reqparse
 from serveza.db import db
@@ -34,6 +35,9 @@ class Beers(Resource):
             beer = scrap_beer(args.name)
         except:
             beer = scrap_beer('%s (bière)' % (args.name))
+
+        if beer is None:
+            abort(404, 'Can\'t find informations about this beer.')
 
         _beer = Beer.query.filter(Beer.name == beer.name).first()
         if _beer is not None:
