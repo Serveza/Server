@@ -84,7 +84,9 @@ class Bars(Resource):
         parser.add_argument('position')
         args = parser.parse_args()
 
-        bar = Bar(name=args.name, owner=current_user)
+        owner = get_user()
+
+        bar = Bar(name=args.name, owner=owner)
         bar.image = args.image
         bar.website = args.website
         bar.position = args.position
