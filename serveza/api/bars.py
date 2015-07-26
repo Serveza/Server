@@ -346,10 +346,12 @@ class BarEvents(Resource):
             parts = [float(part) for part in parts]
             return tuple(parts)
 
+        def date(s):
+            return arrow.get(s)
         parser = reqparse.RequestParser()
         parser.add_argument('name', required=True)
-        parser.add_argument('start', type=arrow.get)
-        parser.add_argument('end', type=arrow.get)
+        parser.add_argument('start', type=date)
+        parser.add_argument('end', type=date)
         parser.add_argument('description')
         parser.add_argument('location', type=location)
         args = parser.parse_args()
