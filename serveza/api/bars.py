@@ -3,7 +3,7 @@ from flask_restful import Resource
 from flask_restful import fields, marshal, reqparse
 from sqlalchemy import func
 from serveza.db import db
-from serveza.login import current_user, login_required, api_token_param
+from serveza.login import current_user, get_user, login_required, api_token_param
 from .base import api, swagger
 from .fields import BAR_BEER_FIELDS, BAR_COMMENT_FIELDS, BAR_DETAILS_FIELDS, BAR_LIST_FIELDS
 
@@ -50,12 +50,12 @@ class Bars(Resource):
 
         if len(args.beers) > 0:
             q = BarBeer.query\
-                        .with_entities(BarBeer.bar_id, func.count('*').label('count'))\
-                        .filter(BarBeer.beer_id.in_(args.beers))\
-                        .group_by(BarBeer.bar_id)\
-                        .subquery()
+                .with_entities(BarBeer.bar_id, func.count('*').label('count'))\
+                .filter(BarBeer.beer_id.in_(args.beers))\
+                .group_by(BarBeer.bar_id)\
+                .subquery()
             bars = bars.outerjoin((q, Bar.id == q.c.bar_id))\
-                        .filter(q.c.count >= len(args.beers))
+                .filter(q.c.count >= len(args.beers))
 
         bars = bars.all()
         return marshal(bars, m_fields, envelope='bars')
@@ -88,8 +88,10 @@ class BarComments(Resource):
     @swagger.operation(
         parameters=[
             dict(api_token_param, paramType='form'),
-            dict(name='score', type='int', description='Score', paramType='form'),
-            dict(name='comment', type='text', description='Score', paramType='form'),
+            dict(name='score', type='int',
+                 description='Score', paramType='form'),
+            dict(name='comment', type='text',
+                 description='Score', paramType='form'),
         ],
     )
     @login_required
@@ -103,14 +105,21 @@ class BarComments(Resource):
         parser.add_argument('comment')
         args = parser.parse_args()
 
-        comment = BarComment(author=current_user, score=args.score, comment=args.comment)
-        bar.comments.append(comment)
+        author = get_user()
 
-        db.session.add(bar)
-        db.session.commit()
+        comment = BarComment(
+            bar=bar, author=author, score=args.score, comment=args.comment)
+
+        try:
+            bar.comments.append(comment)
+            db.session.add(bar)
+            db.session.commit()
+        except:
+            db.session.rollback()
 
         return marshal(comment, BAR_COMMENT_FIELDS, envelope='comment')
 
 api.add_resource(Bars, '/bars')
 api.add_resource(Bar, '/bars/<int:id>', endpoint='bar_details')
-api.add_resource(BarComments, '/bars/<int:id>/comments', endpoint='bar_comments')
+api.add_resource(
+    BarComments, '/bars/<int:id>/comments', endpoint='bar_comments')

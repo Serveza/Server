@@ -112,6 +112,11 @@ class Bar(db.Model):
 
     @position.setter
     def position(self, value):
+        if isinstance(value, str):
+            value = value.split(',')
+            value = [float(part.strip()) for part in value]
+            value = tuple(value)
+
         (latitude, longitude) = value
         self.latitude = latitude
         self.longitude = longitude
@@ -216,8 +221,9 @@ class UserBeer(db.Model):
 class BeerComment(db.Model):
     __tablename__ = 'beer_comments'
 
-    beer_id = db.Column(db.Integer, db.ForeignKey('beers.id'), primary_key=True)
-    author_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    beer_id = db.Column(db.Integer, db.ForeignKey('beers.id'))
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     date = db.Column(ArrowType, default=arrow.get)
 
@@ -240,8 +246,9 @@ class UserBar(db.Model):
 class BarComment(db.Model):
     __tablename__ = 'bar_comments'
 
-    bar_id = db.Column(db.Integer, db.ForeignKey('bars.id'), primary_key=True)
-    author_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    bar_id = db.Column(db.Integer, db.ForeignKey('bars.id'))
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     date = db.Column(ArrowType, default=arrow.get)
 
