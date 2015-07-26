@@ -286,6 +286,7 @@ class BarBeers(Resource):
         entry = BarBeer.query.filter(BarBeer.bar == bar, BarBeer.beer == beer).first()
         if entry is None:
             abort(404)
+        entry.price = args.price
         db.session.add(entry)
         db.session.commit()
 
@@ -347,7 +348,9 @@ class BarEvents(Resource):
             return tuple(parts)
 
         def date(s):
+            print(s)
             return arrow.get(s)
+
         parser = reqparse.RequestParser()
         parser.add_argument('name', required=True)
         parser.add_argument('start', type=date)
