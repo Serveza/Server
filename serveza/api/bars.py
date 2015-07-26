@@ -60,10 +60,39 @@ class Bars(Resource):
         bars = bars.all()
         return marshal(bars, m_fields, envelope='bars')
 
-    @swagger.operation()
+    @swagger.operation(
+        parameters=[
+            dict(api_token_param, paramType='form'),
+            dict(name='name', type='string', description='Bar name',
+                 required=True, paramType='form'),
+            dict(name='image', type='url',
+                 description='Bar photo', paramType='form'),
+            dict(name='website', type='url',
+                 description='Bar website', paramType='form'),
+            dict(name='position', type='string',
+                 description='Bar location', paramType='form'),
+        ],
+    )
     @login_required
     def post(self):
-        pass
+        from serveza.db import Bar
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', required=True)
+        parser.add_argument('image')
+        parser.add_argument('website')
+        parser.add_resource('position')
+        args = parser.parse_args()
+
+        bar = Bar(name=args.name, owner=current_user)
+        bar.image = args.image
+        bar.website = args.website
+        bar.position = args.position
+
+        db.session.add(bar)
+        db.session.commit()
+
+        return marshal(bar, BAR_DETAILS_FIELDS, envelope='bar')
 
 
 class Bar(Resource):
