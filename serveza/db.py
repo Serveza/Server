@@ -74,7 +74,7 @@ class User(db.Model, UserMixin):
     firstname = db.Column(db.String, nullable=True)
     lastname = db.Column(db.String, nullable=True)
 
-    last_event_check = db.Column(ArrowType)
+    last_event_check = db.Column(ArrowType, nullable=True)
 
     owner_bars = db.relationship('Bar', secondary='bar_owners')
     favorited_beers = db.relationship('Beer', secondary='user_beers')
@@ -120,8 +120,11 @@ class Bar(db.Model):
     def address(self):
         from .settings import GEOLOCATOR
 
-        location = GEOLOCATOR.reverse(self.position)
-        return location.address
+        try:
+            location = GEOLOCATOR.reverse(self.position)
+            return location.address
+        except:
+            return None
 
     @hybrid_method
     def distance(self, pos):

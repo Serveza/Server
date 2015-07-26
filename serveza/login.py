@@ -44,3 +44,10 @@ def login_required(f):
 
         return f(*args, **kwargs)
     return wrapper
+
+api_token_param = {
+    'name': 'api_token',
+    'description': 'API token',
+    'required': True,
+    'dataType': 'string',
+}

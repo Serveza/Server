@@ -3,7 +3,7 @@ from flask import abort, jsonify
 from flask_restful import Api, Resource
 from flask_restful import fields, marshal, reqparse
 from serveza.db import db
-from serveza.login import get_user, login_required
+from serveza.login import get_user, login_required, api_token_param
 from .base import api, swagger
 
 # User login / register
@@ -76,7 +76,17 @@ api.add_resource(UserRegister, '/user/register', endpoint='user_register')
 # User notifications
 class UserNotifications(Resource):
 
-    @swagger.operation()
+    @swagger.operation(
+        parameters=[
+            dict(api_token_param, paramType='query'),
+            {
+                'name': 'update',
+                'description': 'Update event check timer',
+                'dataType': 'boolean',
+                'paramType': 'query',
+            }
+        ],
+    )
     @login_required
     def get(self):
         import arrow
@@ -85,7 +95,7 @@ class UserNotifications(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('bar', type=int, action='append', default=[])
         parser.add_argument('type')
-        parser.add_argument('update', type=bool, default=False)
+        parser.add_argument('update', dest='update_timer', default=False)
         args = parser.parse_args()
 
         notifications = Notification.query
@@ -105,12 +115,28 @@ class UserNotifications(Resource):
 
         items = notifications.all()
 
-        if args.update:
+        update_timer = args.update_timer in ['true', 'yes', 1, True]
+        if update_timer:
             user.last_event_check = arrow.get()
             db.session.add(user)
             db.session.commit()
 
         return jsonify(notifications=[item.as_json() for item in items])
+
+    @swagger.operation(
+        parameters=[
+            dict(api_token_param, paramType='form'),
+        ],
+    )
+    @login_required
+    def delete(self):
+        user = get_user()
+        user.last_event_check = None
+
+        db.session.add(user)
+        db.session.commit()
+
+        return 'ok'
 
 api.add_resource(UserNotifications, '/user/notifications', endpoint='user_notifications')
 
@@ -119,13 +145,7 @@ class UserFavoriteBeers(Resource):
 
     @swagger.operation(
         parameters=[
-            {
-                'name': 'api_token',
-                'description': 'API token',
-                'required': True,
-                'dataType': 'string',
-                'paramType': 'query',
-            },
+            dict(api_token_param, paramType='query'),
         ],
     )
     @login_required
@@ -134,17 +154,11 @@ class UserFavoriteBeers(Resource):
 
         user = get_user()
         beers = user.favorited_beers
-        return marshal(beers, BEER_LIST_FIELDS)
+        return marshal(beers, BEER_LIST_FIELDS, envelope='beers')
 
     @swagger.operation(
         parameters=[
-            {
-                'name': 'api_token',
-                'description': 'API token',
-                'required': True,
-                'dataType': 'string',
-                'paramType': 'form',
-            },
+            dict(api_token_param, paramType='form'),
             {
                 'name': 'beer',
                 'description': 'Beer ID',
@@ -187,8 +201,8 @@ class UserFavoriteBeers(Resource):
         if beer is not None:
             with suppress(ValueError):
                 user.favorited_beers.remove(beer)
-            db.session.add(user)
-            db.session.commit()
+                db.session.add(user)
+                db.session.commit()
 
         return 'ok'
 
@@ -201,7 +215,7 @@ class UserFavoriteBars(Resource):
 
         user = get_user()
         bars = user.favorited_bars
-        return marshal(bars, BEER_LIST_FIELDS)
+        return marshal(bars, BAR_LIST_FIELDS, envelope='bars')
 
     @swagger.operation()
     @login_required
@@ -237,8 +251,8 @@ class UserFavoriteBars(Resource):
         if bar is not None:
             with suppress(ValueError):
                 user.favorited_bars.remove(bar)
-            db.session.add(user)
-            db.session.commit()
+                db.session.add(user)
+                db.session.commit()
 
         return 'ok'
 
