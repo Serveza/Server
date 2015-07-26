@@ -232,9 +232,18 @@ class BarBeers(Resource):
 
         bar = Bar.query.get_or_404(id)
 
+        def price(s):
+            from money import Money
+
+            parts = s.split()
+            if len(parts) != 2:
+                raise ValueError('The price must be in format: <amount> <currency>')
+            (amount, currency) = parts
+            return Money(amount, currency)
+
         parser = reqparse.RequestParser()
         parser.add_argument('beer', type=int, required=True)
-        parser.add_argument('price', required=True)
+        parser.add_argument('price', type=price, required=True)
         args = parser.parse_args()
 
         beer = Beer.query.get_or_404(args.beer)
