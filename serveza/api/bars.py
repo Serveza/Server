@@ -1,5 +1,5 @@
 import arrow
-from flask import url_for, jsonify
+from flask import abort, url_for, jsonify
 from flask_restful import Resource
 from flask_restful import fields, marshal, reqparse
 from sqlalchemy import func
@@ -249,6 +249,43 @@ class BarBeers(Resource):
         beer = Beer.query.get_or_404(args.beer)
 
         entry = BarBeer(bar=bar, beer=beer, price=args.price)
+        db.session.add(entry)
+        db.session.commit()
+
+        return marshal(entry, BAR_BEER_FIELDS, envelope='beer')
+
+    @swagger.operation(
+        parameters=[
+            dict(api_token_param, paramType='form'),
+            dict(name='beer', type='int', description='Beer ID', required=True, paramType='form'),
+            dict(name='price', type='string', description='Beer price', required=True, paramType='form'),
+        ],
+    )
+    @login_required
+    def put(self, id):
+        from serveza.db import Bar, BarBeer, Beer
+
+        bar = Bar.query.get_or_404(id)
+
+        def price(s):
+            from money import Money
+
+            parts = s.split()
+            if len(parts) != 2:
+                raise ValueError('The price must be in format: <amount> <currency>')
+            (amount, currency) = parts
+            return Money(amount, currency)
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('beer', type=int, required=True)
+        parser.add_argument('price', type=price, required=True)
+        args = parser.parse_args()
+
+        beer = Beer.query.get_or_404(args.beer)
+
+        entry = BarBeer.query.filter(BarBeer.bar == bar, BarBeer.beer == beer).first()
+        if entry is None:
+            abort(404)
         db.session.add(entry)
         db.session.commit()
 
