@@ -3,7 +3,7 @@ from flask_restful import Resource
 from flask_restful import fields, marshal, reqparse
 from sqlalchemy import func
 from serveza.db import db
-from serveza.login import current_user, login_required
+from serveza.login import current_user, login_required, api_token_param
 from .base import api, swagger
 from .fields import BAR_BEER_FIELDS, BAR_COMMENT_FIELDS, BAR_DETAILS_FIELDS, BAR_LIST_FIELDS
 
@@ -85,7 +85,13 @@ class BarComments(Resource):
         bar = Bar.query.get(id)
         return marshal(bar.comments, BAR_COMMENT_FIELDS, envelope='comments')
 
-    @swagger.operation()
+    @swagger.operation(
+        parameters=[
+            dict(api_token_param, paramType='form'),
+            dict(name='score', type='int', description='Score', paramType='form'),
+            dict(name='comment', type='text', description='Score', paramType='form'),
+        ],
+    )
     @login_required
     def post(self, id):
         from serveza.db import Bar, BarComment
