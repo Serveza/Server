@@ -36,6 +36,8 @@ BAR_DETAILS_FIELDS = {
     'position': fields.FormattedString('{latitude}, {longitude}'),
     'address': fields.String,
     'carte': fields.List(fields.Nested(BAR_BEER_FIELDS)),
+    'image': fields.String,
+    'website': fields.String,
 }
 
 BAR_LIST_FIELDS = {
