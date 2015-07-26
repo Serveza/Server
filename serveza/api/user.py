@@ -5,19 +5,9 @@ from flask_restful import fields, marshal, reqparse
 from serveza.db import db
 from serveza.login import get_user, login_required, api_token_param
 from .base import api, swagger
+from .fields import USER_DETAILS_FIELDS, BEER_LIST_FIELDS, BAR_LIST_FIELDS
 
 # User login / register
-@swagger.model
-class UserModel:
-
-    resource_fields = {
-        'email': fields.String(),
-        'firstname': fields.String(),
-        'lastname': fields.String(),
-        'api_token': fields.String(),
-        'avatar': fields.String(),
-    }
-
 
 class UserLogin(Resource):
 
@@ -35,7 +25,7 @@ class UserLogin(Resource):
         if user is None or user.password != args.password:
             abort(403)
 
-        return jsonify(**marshal(user, UserModel.resource_fields))
+        return jsonify(**marshal(user, USER_DETAILS_FIELDS))
 
     @swagger.operation()
     def get(self):
@@ -68,7 +58,7 @@ class UserRegister(Resource):
         db.session.add(user)
         db.session.commit()
 
-        return jsonify(**marshal(user, UserModel.resource_fields))
+        return jsonify(**marshal(user, USER_DETAILS_FIELDS))
 
 api.add_resource(UserLogin, '/user/login', endpoint='user_login')
 api.add_resource(UserRegister, '/user/register', endpoint='user_register')
@@ -150,8 +140,6 @@ class UserFavoriteBeers(Resource):
     )
     @login_required
     def get(self):
-        from .beers import BEER_LIST_FIELDS
-
         user = get_user()
         beers = user.favorited_beers
         return marshal(beers, BEER_LIST_FIELDS, envelope='beers')
@@ -211,8 +199,6 @@ class UserFavoriteBars(Resource):
     @swagger.operation()
     @login_required
     def get(self):
-        from .bars import BAR_LIST_FIELDS
-
         user = get_user()
         bars = user.favorited_bars
         return marshal(bars, BAR_LIST_FIELDS, envelope='bars')

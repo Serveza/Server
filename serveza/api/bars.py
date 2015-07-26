@@ -2,30 +2,11 @@ from flask import url_for
 from flask_restful import Resource
 from flask_restful import fields, marshal, reqparse
 from sqlalchemy import func
+from serveza.db import db
 from serveza.login import current_user, login_required
 from .base import api, swagger
+from .fields import BAR_BEER_FIELDS, BAR_COMMENT_FIELDS, BAR_DETAILS_FIELDS, BAR_LIST_FIELDS
 
-BAR_BEER_FIELDS = {
-    'beer_id': fields.Integer,
-    'url': fields.String(attribute=lambda entry: url_for('.beer_details', id=entry.beer.id)),
-    'name': fields.String(attribute=lambda entry: entry.beer.name),
-    'price': fields.String,
-}
-
-BAR_DETAILS_FIELDS = {
-    'id': fields.Integer,
-    'name': fields.String,
-    'position': fields.FormattedString('{latitude}, {longitude}'),
-    'address': fields.String,
-    'carte': fields.List(fields.Nested(BAR_BEER_FIELDS)),
-}
-
-BAR_LIST_FIELDS = {
-    'id': fields.Integer,
-    'url': fields.Url('.bar_details'),
-    'name': fields.String,
-    'position': fields.FormattedString('{latitude}, {longitude}'),
-}
 
 class Bars(Resource):
 
@@ -92,9 +73,38 @@ class Bar(Resource):
         from serveza.db import Bar
 
         bar = Bar.query.get(id)
-
         return marshal(bar, BAR_DETAILS_FIELDS, envelope='bar')
 
 
+class BarComments(Resource):
+
+    @swagger.operation()
+    def get(self, id):
+        from serveza.db import Bar
+
+        bar = Bar.query.get(id)
+        return marshal(bar.comments, BAR_COMMENT_FIELDS, envelope='comments')
+
+    @swagger.operation()
+    @login_required
+    def post(self, id):
+        from serveza.db import Bar, BarComment
+
+        bar = Bar.query.get(id)
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('score', type=int)
+        parser.add_argument('comment')
+        args = parser.parse_args()
+
+        comment = BarComment(author=current_user, score=args.score, comment=args.comment)
+        bar.comments.append(comment)
+
+        db.session.add(bar)
+        db.session.commit()
+
+        return marshal(comment, BAR_COMMENT_FIELDS, envelope='comment')
+
 api.add_resource(Bars, '/bars')
 api.add_resource(Bar, '/bars/<int:id>', endpoint='bar_details')
+api.add_resource(BarComments, '/bars/<int:id>/comments', endpoint='bar_comments')

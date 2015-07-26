@@ -213,6 +213,21 @@ class UserBeer(db.Model):
         db.Integer, db.ForeignKey('beers.id'), primary_key=True)
 
 
+class BeerComment(db.Model):
+    __tablename__ = 'beer_comments'
+
+    beer_id = db.Column(db.Integer, db.ForeignKey('beers.id'), primary_key=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+
+    date = db.Column(ArrowType, default=arrow.get)
+
+    score = db.Column(db.Integer, nullable=True)
+    comment = db.Column(db.Text, nullable=True)
+
+    beer = db.relationship('Beer', backref=db.backref('comments', order_by=date))
+    author = db.relationship('User', backref=db.backref('beer_comments'))
+
+
 class UserBar(db.Model):
     __tablename__ = 'user_bars'
 
@@ -220,6 +235,21 @@ class UserBar(db.Model):
         db.Integer, db.ForeignKey('users.id'), primary_key=True)
     bar_id = db.Column(
         db.Integer, db.ForeignKey('bars.id'), primary_key=True)
+
+
+class BarComment(db.Model):
+    __tablename__ = 'bar_comments'
+
+    bar_id = db.Column(db.Integer, db.ForeignKey('bars.id'), primary_key=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+
+    date = db.Column(ArrowType, default=arrow.get)
+
+    score = db.Column(db.Integer, nullable=True)
+    comment = db.Column(db.Text, nullable=True)
+
+    bar = db.relationship('Bar', backref=db.backref('comments', order_by=date))
+    author = db.relationship('User', backref=db.backref('bar_comments'))
 
 
 class Notification(db.Model):
