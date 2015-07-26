@@ -56,7 +56,7 @@ class Bars(Resource):
         bars = Bar.query
 
         if args.owned and current_user:
-            bars = bars.filter(Bar.owners.contains(current_user._get_current_object()))
+            bars = bars.filter(Bar.owner == current_user._get_current_object())
 
         if all(p is not None for p in pos):
             bars = bars.order_by(Bar.distance(pos))
