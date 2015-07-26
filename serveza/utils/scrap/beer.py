@@ -1,8 +1,6 @@
 import wikipedia
 from ratebeer import RateBeer
 
-rb = RateBeer()
-
 wikipedia.set_lang('fr')
 
 def scrap_beer(name):
@@ -10,9 +8,11 @@ def scrap_beer(name):
 
     try:
         page = wikipedia.page(name, auto_suggest=True)
+        rb = RateBeer()
         rb_result = rb.search(name)['beers'][0]
         rb_beer = rb.get_beer(rb_result['url'])
-    except:
+    except e:
+        print(e)
         return None
 
     def find_proper_image(urls):
