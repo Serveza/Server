@@ -324,7 +324,7 @@ class BarEvent(Notification):
 
         data = super().as_json()
 
-        data['bar'] = '/api/bars/%d' % (self.bar_id)
+        data['bar'] = url_for('api.bar_details', id=self.bar_id) if self.bar_id else None
 
         data['start'] = self.start.datetime if self.start else None
         data['end'] = self.end.datetime if self.end else None
