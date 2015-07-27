@@ -336,7 +336,7 @@ class BarEvent(Notification):
         data['address'] = self.address
 
         # Easier accesses for specific informations
-        data['bar_image'] = self.bar.image
+        data['bar_image'] = self.bar.image if self.bar else None
 
         return data
 
