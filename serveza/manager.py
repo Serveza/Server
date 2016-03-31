@@ -18,6 +18,8 @@ def resetdb():
     from .scripts.resetdb import reset_db
 
     app.config['SQLALCHEMY_ECHO'] = True
+    db.drop_all()
+    db.create_all()
     reset_db()
 
 # Import beer

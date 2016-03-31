@@ -46,15 +46,52 @@ def reset_bars():
 
 
 def reset_beers():
-    from serveza.db import db
-    from serveza.utils.scrap.beer import scrap_beer
+    import wikipedia
+    from serveza.db import Beer
+
+    def find_proper_image(urls):
+        import re
+
+        EXCLUDES = [
+            'Emoji',
+            'Disambig',
+            'Hainaut',
+            'Liste',
+        ]
+        PATTERNS = [
+            r'\.svg$',
+        ]
+
+        for url in urls:
+            good = True
+
+            for word in EXCLUDES:
+                if word in url:
+                    good = False
+                    break
+
+            for pattern in PATTERNS:
+                if re.search(pattern, url):
+                    good = False
+                    break
+
+            if good:
+                return url
+
+        return None
 
     beers_file = DATA_DIR / 'beers.csv'
     with beers_file.open() as f:
         reader = data_reader(f)
 
         for row in reader:
-            beer = scrap_beer(row['name'])
+            name = row['name']
+            page = wikipedia.page(name, auto_suggest=True)
+
+            beer = Beer(name=page.title)
+            beer.image = find_proper_image(page.images)
+            beer.brewery = row['brewery']
+            beer.degree = row['degree']
             db.session.add(beer)
 
 # > Cartes
@@ -77,7 +114,8 @@ def reset_cartes():
 
                 entry = BarBeer(bar=bar, beer=beer, price=price)
                 db.session.add(entry)
-            except:
+            except Exception as e:
+                print(e)
                 pass
 
 # > Events
@@ -97,7 +135,7 @@ def reset_events():
 
                 event = BarEvent(bar=bar, name=name)
                 db.session.add(event)
-            except e:
+            except:
                 pass
 
 # Users

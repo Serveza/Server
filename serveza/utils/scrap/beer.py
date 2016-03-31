@@ -9,10 +9,11 @@ def scrap_beer(name):
     try:
         page = wikipedia.page(name, auto_suggest=True)
         rb = RateBeer()
-        rb_result = rb.search(page.title)['beers'][0]
-        rb_beer = rb.get_beer(rb_result['url'])
-    except:
+        rb_beer = rb.search(page.title)['beers'][0]
+    except Exception as e:
         return None
+
+    rb_beer._populate()
 
     def find_proper_image(urls):
         import re

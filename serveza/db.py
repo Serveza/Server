@@ -186,11 +186,11 @@ class Beer(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    image = db.Column(URLType)
+    image = db.Column(URLType, nullable=True)
     name = db.Column(db.Unicode)
     brewery = db.Column(db.Unicode)
     degree = db.Column(db.Float)
-    description = db.Column(db.Text)
+    description = db.Column(db.Text, nullable=True)
 
     fans = db.relationship('User', secondary='user_beers')
 
