@@ -1,14 +1,60 @@
 import csv
 import getpass
+import io
+import sqlite3
+import json
+import requests
+import re
+import urllib.request
+import os
+
 from geopy.geocoders import GoogleV3
 from serveza.app import app
 from serveza.db import db
 from serveza.settings import PROJECT_ROOT, DB_PATH
+from pprint import pprint
+from bs4 import BeautifulSoup
+from pathlib import Path
 
 DATA_DIR = PROJECT_ROOT / 'data'
 
 # Data
 
+# > thomas's fix
+def get_soup(url,header):
+    return BeautifulSoup(urllib.request.urlopen(urllib.request.Request(url,headers=header)), "html.parser")
+
+
+def get_image_url(key_word):
+    image_type = "beer"     
+    query = key_word
+    query= query.split()
+    query='+'.join(query)
+    url=url="https://www.google.co.in/search?q="+query+"&source=lnms&tbm=isch"
+    header = {'User-Agent': 'Mozilla/5.0'} 
+    soup = get_soup(url,header)
+    images = [a['src'] for a in soup.find_all("img", {"src": re.compile("gstatic.com")})]
+    for img in images:
+        return img
+    return ""
+
+
+def connect(sqlite_file):
+    conn = sqlite3.connect(sqlite_file)
+    c = conn.cursor()
+    return conn, c
+    
+def close(conn):
+    conn.commit()
+    conn.close()
+
+def get_beer_image(beer):
+    return get_image_url(beer[1] + "+" + beer[3])
+
+def get_beer_list(c):
+    c.execute('SELECT * FROM beer WHERE 1')
+    result = c.fetchall()
+    return result
 
 def reset_data():
     reset_bars()
@@ -33,6 +79,7 @@ def reset_bars():
         reader = data_reader(f)
 
         for row in reader:
+            
             name = row['name']
             address = row['address']
 
@@ -46,53 +93,23 @@ def reset_bars():
 
 
 def reset_beers():
-    import wikipedia
     from serveza.db import Beer
 
-    def find_proper_image(urls):
-        import re
-
-        EXCLUDES = [
-            'Emoji',
-            'Disambig',
-            'Hainaut',
-            'Liste',
-        ]
-        PATTERNS = [
-            r'\.svg$',
-        ]
-
-        for url in urls:
-            good = True
-
-            for word in EXCLUDES:
-                if word in url:
-                    good = False
-                    break
-
-            for pattern in PATTERNS:
-                if re.search(pattern, url):
-                    good = False
-                    break
-
-            if good:
-                return url
-
-        return None
-
-    beers_file = DATA_DIR / 'beers.csv'
-    with beers_file.open() as f:
-        reader = data_reader(f)
-
-        for row in reader:
-            name = row['name']
-            page = wikipedia.page(name, auto_suggest=True)
-
-            beer = Beer(name=page.title)
-            beer.image = find_proper_image(page.images)
-            beer.brewery = row['brewery']
-            beer.degree = row['degree']
-            db.session.add(beer)
+    beers_file = 'data/beer.db'
+   
+    conn, c = connect(beers_file)
+   
+    beers = get_beer_list(c)
+   
+    for beertmp in beers:
+        name = beertmp[1]
+        beer = Beer()
+        beer.name = name
+        beer.image = get_beer_image(beertmp)
+        beer.brewery = beertmp[3]
+        beer.degree = beertmp[4]
+        print("add to db ", beer.name)
+        db.session.add(beer)
 
 # > Cartes
 
