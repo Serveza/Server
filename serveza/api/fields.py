@@ -51,6 +51,7 @@ BEER_LIST_FIELDS = {
     'id': fields.Integer,
     'url': fields.Url('.beer_details'),
     'name': fields.String,
+    'image': fields.String,
 }
 
 BEER_DETAILS_FIELDS = {
