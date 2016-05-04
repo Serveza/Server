@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{4b182f36-8bb2-411a-bd64-14956bc8f45d}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>manage.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId />
+    <InterpreterVersion />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+    <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="migrations\alembic.ini" />
+    <Content Include="requirements.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="manage.py" />
+    <Compile Include="migrations\env.py" />
+    <Compile Include="migrations\versions\182e20a277d_add_notifications.py" />
+    <Compile Include="migrations\versions\2aafb16541a_add_bar_beer_comments.py" />
+    <Compile Include="migrations\versions\2d7048d80ce_add_bar_image.py" />
+    <Compile Include="migrations\versions\2e0efb4721e_init.py" />
+    <Compile Include="migrations\versions\379a369c64e_add_favorited_beers_and_bars.py" />
+    <Compile Include="migrations\versions\3abbccb2d8f_add_bar_website.py" />
+    <Compile Include="migrations\versions\a7a2780295_add_user_last_event_check.py" />
+    <Compile Include="serveza\api\bars.py" />
+    <Compile Include="serveza\api\base.py" />
+    <Compile Include="serveza\api\beers.py" />
+    <Compile Include="serveza\api\fields.py" />
+    <Compile Include="serveza\api\user.py" />
+    <Compile Include="serveza\api\__init__.py" />
+    <Compile Include="serveza\app.py" />
+    <Compile Include="serveza\db.py" />
+    <Compile Include="serveza\login.py" />
+    <Compile Include="serveza\manager.py" />
+    <Compile Include="serveza\scripts\resetdb.py" />
+    <Compile Include="serveza\scripts\run.py" />
+    <Compile Include="serveza\scripts\__init__.py" />
+    <Compile Include="serveza\settings.py" />
+    <Compile Include="serveza\utils\scrap\beer.py" />
+    <Compile Include="serveza\utils\scrap\__init__.py" />
+    <Compile Include="serveza\utils\__init__.py" />
+    <Compile Include="serveza\__init__.py" />
+    <Compile Include="setup.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="migrations" />
+    <Folder Include="migrations\versions" />
+    <Folder Include="serveza" />
+    <Folder Include="serveza\api" />
+    <Folder Include="serveza\scripts" />
+    <Folder Include="serveza\utils" />
+    <Folder Include="serveza\utils\scrap" />
+  </ItemGroup>
+  <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
+</Project>
