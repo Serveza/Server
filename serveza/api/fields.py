@@ -5,6 +5,7 @@ BAR_BEER_FIELDS = {
     'id': fields.Integer(attribute=lambda entry: entry.beer_id),
     'url': fields.String(attribute=lambda entry: url_for('.beer_details', id=entry.beer.id)),
     'name': fields.String(attribute=lambda entry: entry.beer.name),
+    'image': fields.String(attribute=lambda entry: entry.beer.image),
     'price': fields.String,
 }
 
