@@ -45,8 +45,8 @@ BAR_LIST_FIELDS = {
     'url': fields.Url('.bar_details'),
     'name': fields.String,
     'image': fields.String,
+    'carte': fields.List(fields.Nested(BAR_BEER_FIELDS)),
     'position': fields.FormattedString('{latitude}, {longitude}'),
-    'website': fields.String,
 }
 
 BEER_LIST_FIELDS = {
