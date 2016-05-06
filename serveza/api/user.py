@@ -161,7 +161,7 @@ class UserFavoriteBeers(Resource):
         from serveza.db import Beer
 
         parser = reqparse.RequestParser()
-        parser.add_argument('beer', type=int)
+        parser.add_argument('beer', type=int, required=True)
         args = parser.parse_args()
 
         user = get_user()
@@ -180,7 +180,7 @@ class UserFavoriteBeers(Resource):
         from serveza.db import Beer
 
         parser = reqparse.RequestParser()
-        parser.add_argument('beer', type=int)
+        parser.add_argument('beer', type=int, required=True)
         args = parser.parse_args()
 
         user = get_user()
@@ -209,7 +209,7 @@ class UserFavoriteBars(Resource):
         from serveza.db import Bar
 
         parser = reqparse.RequestParser()
-        parser.add_argument('bar', type=int)
+        parser.add_argument('bar', type=int, required=True)
         args = parser.parse_args()
 
         user = get_user()
@@ -228,7 +228,7 @@ class UserFavoriteBars(Resource):
         from serveza.db import Bar
 
         parser = reqparse.RequestParser()
-        parser.add_argument('bar', type=int)
+        parser.add_argument('bar', type=int, required=True)
         args = parser.parse_args()
 
         user = get_user()
