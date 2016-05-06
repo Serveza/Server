@@ -42,7 +42,7 @@ def reset_data():
     reset_bars()
     reset_beers()
     reset_cartes()
-    reset_events()
+  #  reset_events()
 
 
 def data_reader(f):
